@@ -1,0 +1,24 @@
+:host {
+  ::ng-deep .mat-vertical-stepper-content {
+    padding-top: 10px;
+  }
+
+  mat-chip-set,
+  mat-card {
+    margin-bottom: 20px;
+  }
+
+  mat-card-header {
+    margin-bottom: 15px;
+  }
+
+  mat-card-content {
+    font-size: 0.8em;
+    line-height: 1.6em;
+
+    p:first-child {
+      font-weight: 500;
+      font-size: 1.1em;
+    }
+  }
+}

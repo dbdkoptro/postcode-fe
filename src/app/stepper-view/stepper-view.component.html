@@ -1,0 +1,92 @@
+<mat-vertical-stepper [linear]="true" (selectionChange)="onStepChange($event)">
+  <mat-step [stepControl]="formStepOne">
+    <ng-template matStepLabel>Find Suburbs</ng-template>
+
+    <div class="step-fields-wrapper">
+      <div class="col-12">
+        <mat-form-field appearance="outline">
+          <mat-label><label for="postCode">Postcode</label></mat-label>
+          <input
+            name="postCode"
+            type="number"
+            matInput
+            [formControl]="postCodeControl"
+            placeholder="Enter postcode" />
+        </mat-form-field>
+      </div>
+      <div class="col-12" [hidden]="suburbControl.disabled">
+        <mat-form-field appearance="outline">
+          <mat-label> <label for="suburb">Suburbs</label></mat-label>
+          <mat-select [formControl]="suburbControl" name="suburb" multiple>
+            <mat-select-trigger>
+              {{ suburbControl.value?.length }} Selected
+            </mat-select-trigger>
+            <mat-option
+              *ngFor="let suburbOption of suburbsSelectList"
+              [value]="suburbOption">
+              {{ suburbOption.suburb.name }},
+              {{ suburbOption.suburb.state.abbreviation }}
+              {{ suburbOption.suburb.postcode }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+    </div>
+
+    <div *ngIf="selectedSuburbsChips?.length">
+      <mat-chip-set class="example-chip" aria-label="Fish selection">
+        <mat-chip
+          class="example-box"
+          *ngFor="let suburbOption of selectedSuburbsChips"
+          (removed)="onRemoveChipClick(suburbOption)">
+          {{ suburbOption.suburb.name }},
+          {{ suburbOption.suburb.state.abbreviation }}
+          {{ suburbOption.suburb.postcode }}
+          <button
+            matChipRemove
+            [attr.aria-label]="'remove ' + suburbOption.suburb.name">
+            <mat-icon>cancel</mat-icon>
+          </button>
+        </mat-chip>
+      </mat-chip-set>
+    </div>
+
+    <div class="step-navigation text-sm-start">
+      <button mat-flat-button color="primary" matStepperNext>Next</button>
+    </div>
+  </mat-step>
+
+  <mat-step>
+    <ng-template matStepLabel>See their neighbour suburbs</ng-template>
+
+    <div class="step-cards-wrapper row" *ngIf="stepSelectedIndex === 1">
+      <div
+        class="col-12 col-md-6 col-lg-4"
+        *ngFor="let suburbOption of selectedSuburbsChips">
+        <mat-card>
+          <mat-card-header>
+            <mat-card-title>{{ suburbOption.suburb.name }}</mat-card-title>
+            <mat-card-subtitle>
+              {{ suburbOption.suburb.state.name }}
+              {{ suburbOption.suburb.postcode }}
+            </mat-card-subtitle>
+          </mat-card-header>
+          <mat-card-content>
+            <p [hidden]="suburbOption.isLoading$ | async">Neighbour suburbs:</p>
+            <div *ngFor="let neighbour of suburbOption.neighbours | async">
+              {{ neighbour.name }}, {{ neighbour.postcode }}
+              {{ neighbour.state.abbreviation }}
+            </div>
+          </mat-card-content>
+          <mat-card-footer *ngIf="suburbOption.isLoading$ | async">
+            <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+          </mat-card-footer>
+        </mat-card>
+      </div>
+    </div>
+
+    <div class="step-navigation text-sm-start">
+      <button mat-stroked-button matStepperPrevious>Back</button>
+    </div>
+  </mat-step>
+</mat-vertical-stepper>

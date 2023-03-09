@@ -12,6 +12,7 @@ export class SuburbService {
 
   constructor(private http: HttpClient) {}
 
+  // TODO
   public getSuburbsByPostCode(postCode: number): Observable<Suburb[]> {
     return of(suburbsMock).pipe(
       map(suburbs => suburbs.sort((a, b) => a.name.localeCompare(b.name)))
@@ -22,10 +23,11 @@ export class SuburbService {
     // });
   }
 
+  // TODO
   public getNeighbourSuburbs(suburb: Suburb): Observable<Suburb[]> {
     return of(suburbsMock).pipe(
       map(suburbs => suburbs.sort((a, b) => a.name.localeCompare(b.name))),
-      delay(1000)
+      delay(250)
     );
   }
 }
