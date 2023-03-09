@@ -22,7 +22,7 @@ import {
   finalize,
   Subject
 } from 'rxjs';
-import { isEqualSuburbOption } from '../suburbs/helpers/suburb.helper';
+import { isEqualSuburb } from '../suburbs/helpers/suburb.helper';
 import { Suburb, SuburbOption } from '../suburbs/models/suburb.model';
 import { SuburbService } from '../suburbs/services/suburb.service';
 import { chipsValidator } from './validators/chips.validator';
@@ -233,7 +233,7 @@ export class StepperViewComponent implements OnInit, OnDestroy {
   }
 
   private isEqualSuburbOption(a: SuburbOption, b: SuburbOption): boolean {
-    return isEqualSuburbOption(a.suburb, b.suburb);
+    return isEqualSuburb(a.suburb, b.suburb);
   }
 
   private isPostcodeValid(postcode: number): boolean {

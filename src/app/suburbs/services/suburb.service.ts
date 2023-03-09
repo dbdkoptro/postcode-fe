@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { catchError, delay, filter, map, Observable, of } from 'rxjs';
-import { isEqualSuburbOption } from '../helpers/suburb.helper';
+import { isEqualSuburb } from '../helpers/suburb.helper';
 import { Suburb } from '../models/suburb.model';
 
 @Injectable({
@@ -36,7 +36,7 @@ export class SuburbService {
       .pipe(
         map(suburbs =>
           suburbs
-            .filter(neighbour => !isEqualSuburbOption(suburb, neighbour))
+            .filter(neighbour => !isEqualSuburb(suburb, neighbour))
             .sort(this.compareSuburbs)
         ),
         catchError(() => of([]))
