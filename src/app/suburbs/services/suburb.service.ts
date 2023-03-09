@@ -1,33 +1,49 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { delay, map, Observable, of } from 'rxjs';
+import { catchError, delay, filter, map, Observable, of } from 'rxjs';
+import { isEqualSuburbOption } from '../helpers/suburb.helper';
 import { Suburb } from '../models/suburb.model';
-import { suburbsMock } from './suburb.mock';
 
 @Injectable({
   providedIn: 'root'
 })
 export class SuburbService {
-  private endpointUrl = '/suburbs.json';
+  private suburbsEndpoint = '/suburbs.json';
+  private radiusEndpoint = '/radius.json';
 
   constructor(private http: HttpClient) {}
 
-  // TODO
   public getSuburbsByPostCode(postCode: number): Observable<Suburb[]> {
-    return of(suburbsMock).pipe(
-      map(suburbs => suburbs.sort((a, b) => a.name.localeCompare(b.name)))
-    );
-
-    // return this.http.get<Suburb[]>(this.endpointUrl, {
-    //   params: { postcode: postCode }
-    // });
+    return this.http
+      .get<Suburb[]>(this.suburbsEndpoint, {
+        params: { postcode: postCode }
+      })
+      .pipe(
+        map(suburbs => suburbs.sort(this.compareSuburbs)),
+        catchError(() => of([]))
+      );
   }
 
-  // TODO
   public getNeighbourSuburbs(suburb: Suburb): Observable<Suburb[]> {
-    return of(suburbsMock).pipe(
-      map(suburbs => suburbs.sort((a, b) => a.name.localeCompare(b.name))),
-      delay(250)
-    );
+    return this.http
+      .get<Suburb[]>(this.radiusEndpoint, {
+        params: {
+          distance: 4000,
+          latitude: suburb.latitude,
+          longitude: suburb.longitude
+        }
+      })
+      .pipe(
+        map(suburbs =>
+          suburbs
+            .filter(neighbour => !isEqualSuburbOption(suburb, neighbour))
+            .sort(this.compareSuburbs)
+        ),
+        catchError(() => of([]))
+      );
+  }
+
+  private compareSuburbs(a: Suburb, b: Suburb): number {
+    return a.name.localeCompare(b.name);
   }
 }
