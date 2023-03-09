@@ -22,8 +22,10 @@ import {
   finalize,
   Subject
 } from 'rxjs';
+import { isEqualSuburbOption } from '../suburbs/helpers/suburb.helper';
 import { Suburb, SuburbOption } from '../suburbs/models/suburb.model';
 import { SuburbService } from '../suburbs/services/suburb.service';
+import { chipsValidator } from './validators/chips.validator';
 
 @Component({
   selector: 'app-stepper-view',
@@ -42,6 +44,12 @@ export class StepperViewComponent implements OnInit, OnDestroy {
   public selectedSuburbsChips: SuburbOption[] = [];
 
   public stepSelectedIndex: number;
+
+  public suburbPluralMapping = {
+    '=0': '0 Suburbs',
+    '=1': '1 Suburb',
+    other: '# Suburbs'
+  };
 
   private destroy$ = new Subject<void>();
 
@@ -92,6 +100,12 @@ export class StepperViewComponent implements OnInit, OnDestroy {
     );
 
     this.selectedSuburbsChips.splice(indexToRemove, 1);
+
+    if (this.selectedSuburbsChips.length === 0) {
+      // Updating validity
+      this.postCodeControl.updateValueAndValidity({ emitEvent: false });
+      this.suburbControl.updateValueAndValidity({ emitEvent: false });
+    }
   }
 
   private addChip(suburbOption: SuburbOption): void {
@@ -104,11 +118,14 @@ export class StepperViewComponent implements OnInit, OnDestroy {
   }
 
   private initializeFormControls(): void {
-    this.postCodeControl = this.fb.control(null, Validators.required);
+    this.postCodeControl = this.fb.control(
+      null,
+      chipsValidator(this.selectedSuburbsChips)
+    );
 
     this.suburbControl = this.fb.control(
       { value: null, disabled: true },
-      Validators.required
+      chipsValidator(this.selectedSuburbsChips)
     );
 
     this.formStepOne = this.fb.group({
@@ -121,15 +138,18 @@ export class StepperViewComponent implements OnInit, OnDestroy {
     this.postCodeControl.valueChanges
       .pipe(
         tap(postCode => {
-          if (postCode.toString().length < 3) this.resetSuburbsControl();
+          if (!this.isPostcodeValid(postCode)) this.resetSuburbsControl();
         }),
-        filter(postCode => postCode.toString().length >= 3),
+        // Requests are sent after 3 characters has been entered
+        filter(this.isPostcodeValid),
         debounceTime(300),
         takeUntil(this.destroy$),
         switchMap(postCode => this.suburbService.getSuburbsByPostCode(postCode))
       )
       .subscribe(suburbs => {
-        this.updateSuburbsList(suburbs);
+        if (this.isPostcodeValid(this.postCodeControl.value)) {
+          this.updateSuburbsList(suburbs);
+        }
       });
 
     this.suburbControl.valueChanges
@@ -180,41 +200,44 @@ export class StepperViewComponent implements OnInit, OnDestroy {
           this.isEqualSuburbOption(selectedElement, selectedOption)
         ) !== -1;
 
+      // If suburb is in select component but is not selected, it means it has been unselected so we remove the chip
       if (isInSelectList && !isSelected) {
         this.removeChip(selectedOption);
       }
     });
 
+    // For all selected suburbs we add the corresponding chip
     selectedSuburbs?.forEach(selectedOption => this.addChip(selectedOption));
 
     this.cd.markForCheck();
   }
 
   private generateSuburbOption(suburb: Suburb): SuburbOption {
+    // true as default value so loading is shown on subscribe
     const isLoading$ = new BehaviorSubject<boolean>(true);
 
     return {
       suburb,
       neighbours: this.suburbService
         .getNeighbourSuburbs(suburb)
+        // When request is finished loading is disabled
         .pipe(finalize(() => isLoading$.next(false))),
       isLoading$
     };
   }
 
   private resetLoadingsOnChips(): void {
-    this.selectedSuburbsChips = this.selectedSuburbsChips.map(chip =>
-      this.generateSuburbOption(chip.suburb)
+    this.selectedSuburbsChips.forEach(chip =>
+      Object.assign(chip, this.generateSuburbOption(chip.suburb))
     );
   }
 
   private isEqualSuburbOption(a: SuburbOption, b: SuburbOption): boolean {
-    return (
-      a.suburb.name === b.suburb.name &&
-      a.suburb.postcode === b.suburb.postcode &&
-      a.suburb.latitude === b.suburb.latitude &&
-      a.suburb.longitude === b.suburb.longitude
-    );
+    return isEqualSuburbOption(a.suburb, b.suburb);
+  }
+
+  private isPostcodeValid(postcode: number): boolean {
+    return postcode?.toString().length >= 3;
   }
 
   public ngOnDestroy(): void {

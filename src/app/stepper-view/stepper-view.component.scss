@@ -3,6 +3,10 @@
     padding-top: 10px;
   }
 
+  .step-fields-wrapper > div:last-child {
+    margin-bottom: 20px;
+  }
+
   mat-chip-set,
   mat-card {
     margin-bottom: 20px;
@@ -19,6 +23,10 @@
     p:first-child {
       font-weight: 500;
       font-size: 1.1em;
+    }
+
+    .no-neighbours {
+      color: gray;
     }
   }
 }

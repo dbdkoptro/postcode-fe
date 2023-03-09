@@ -9,6 +9,7 @@
           <input
             name="postCode"
             type="number"
+            max="9999"
             matInput
             [formControl]="postCodeControl"
             placeholder="Enter postcode" />
@@ -29,6 +30,12 @@
               {{ suburbOption.suburb.postcode }}
             </mat-option>
           </mat-select>
+          <mat-hint>
+            {{
+              suburbsSelectList.length | i18nPlural : suburbPluralMapping
+            }}
+            found
+          </mat-hint>
         </mat-form-field>
       </div>
     </div>
@@ -57,7 +64,7 @@
   </mat-step>
 
   <mat-step>
-    <ng-template matStepLabel>See their neighbour suburbs</ng-template>
+    <ng-template matStepLabel>See their neighbour Suburbs</ng-template>
 
     <div class="step-cards-wrapper row" *ngIf="stepSelectedIndex === 1">
       <div
@@ -72,11 +79,18 @@
             </mat-card-subtitle>
           </mat-card-header>
           <mat-card-content>
-            <p [hidden]="suburbOption.isLoading$ | async">Neighbour suburbs:</p>
-            <div *ngFor="let neighbour of suburbOption.neighbours | async">
-              {{ neighbour.name }}, {{ neighbour.postcode }}
-              {{ neighbour.state.abbreviation }}
-            </div>
+            <p [hidden]="suburbOption.isLoading$ | async">
+              Neighbour suburbs (4km radius):
+            </p>
+            <ng-container *ngIf="suburbOption.neighbours | async as neighbours">
+              <div *ngFor="let neighbour of neighbours">
+                {{ neighbour.name }}, {{ neighbour.postcode }}
+                {{ neighbour.state.abbreviation }}
+              </div>
+              <div *ngIf="!neighbours.length" class="no-neighbours">
+                No neighbours were found
+              </div>
+            </ng-container>
           </mat-card-content>
           <mat-card-footer *ngIf="suburbOption.isLoading$ | async">
             <mat-progress-bar mode="indeterminate"></mat-progress-bar>
