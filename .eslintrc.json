@@ -30,7 +30,8 @@
             "style": "kebab-case"
           }
         ],
-        "import/no-unresolved": "error"
+        "import/no-unresolved": "error",
+        "no-explicit-any": false
       },
       "parser": "@typescript-eslint/parser",
       "settings": {
